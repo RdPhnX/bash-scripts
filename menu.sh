@@ -8,6 +8,7 @@ set -u
 declare OPTIONS=()
 declare PROMPT="Select an option:"
 declare SELECTED=0
+readonly SINGLE_SELECT_NAV_STRING=$'Navigation: \e[1;34m↑\e[0m/\e[1;34m↓\e[0m arrows to move, \e[1;34mEnter\e[0m to select\n'
 
 # Save cursor position
 save_cursor() {
@@ -34,6 +35,10 @@ show_cursor() {
     printf "\e[?25h"
 }
 
+highlight() {
+    printf "\033[7m%s\033[0m\n" "$1"
+}
+
 # Function to display the menu
 display_menu() {
     # Save cursor position before drawing menu
@@ -46,11 +51,15 @@ display_menu() {
 
     for i in "${!OPTIONS[@]}"; do
         if ((i == SELECTED)); then
-            printf "[×] %s\n" "${OPTIONS[$i]}"
+            highlight "[•] ${OPTIONS[$i]}"
         else
             printf "[ ] %s\n" "${OPTIONS[$i]}"
         fi
     done
+
+    # Add navigation instructions
+    printf "\n"
+    printf "%s\n" "$SINGLE_SELECT_NAV_STRING"
 
     # Return to saved position
     restore_cursor
@@ -115,15 +124,15 @@ main() {
         down)
             # Move selection down
             ((SELECTED++))
-            if ((SELECTED > total)); then
+            if ((SELECTED >= total)); then
                 SELECTED=0
             fi
             display_menu
             ;;
         enter)
             # User pressed Enter, return the selected option
-            # Move cursor to bottom of menu area
-            printf "\033[%sB" $((total + 1))
+            # Move cursor to bottom of menu area + navigation instructions
+            printf "\033[%sB" $((total + 3))
             show_cursor
             echo "You selected: ${OPTIONS[$SELECTED]}"
             exit 0
