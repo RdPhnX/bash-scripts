@@ -12,17 +12,17 @@ readonly SINGLE_SELECT_NAV_STRING=$'Navigation: \e[1;34m↑\e[0m/\e[1;34m↓\e[0
 
 # Save cursor position
 save_cursor() {
-    printf "\033[s"
+    printf "\e[s"
 }
 
 # Restore cursor position
 restore_cursor() {
-    printf "\033[u"
+    printf "\e[u"
 }
 
 # Clear from cursor to end of screen
 clear_to_end() {
-    printf "\033[J"
+    printf "\e[J"
 }
 
 # Hide cursor
@@ -36,7 +36,7 @@ show_cursor() {
 }
 
 highlight() {
-    printf "\033[7m%s\033[0m\n" "$1"
+    printf "\e[7m%s\e[0m\n" "$1"
 }
 
 # Function to display the menu
@@ -99,7 +99,7 @@ main() {
     local total=${#OPTIONS[@]}
 
     hide_cursor
-    trap show_cursor EXIT # Ensure cursor is shown when script exits
+    trap 'clear_to_end; show_cursor' EXIT # Ensure menu is cleared when script exits
 
     # Store current cursor position before displaying menu
     save_cursor
@@ -131,9 +131,10 @@ main() {
             ;;
         enter)
             # User pressed Enter, return the selected option
-            # Move cursor to bottom of menu area + navigation instructions
-            printf "\033[%sB" $((total + 3))
+            # Move cursor to right after the prompt
+            printf "\e[1B"
             show_cursor
+            clear_to_end
             echo "You selected: ${OPTIONS[$SELECTED]}"
             exit 0
             ;;
